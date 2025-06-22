@@ -1,0 +1,77 @@
+{
+  "device": {
+    "name": "KommPad",
+    "version": "1.0",
+    "firmware": "1.0.0",
+    "backlightEnabled": true,
+    "defaultLayer": 1
+  },
+  "mappings": {
+    "button1": {
+      "layer1": {
+        "action": "key",
+        "value": "a",
+        "description": "Press 'a' key"
+      },
+      "layer2": {
+        "action": "key",
+        "value": "1",
+        "description": "Press '1' key"
+      },
+      "layer3": {
+        "action": "macro",
+        "value": ["CTRL", "c"],
+        "description": "Copy"
+      },
+      "layer4": {
+        "action": "function",
+        "value": "volumeUp",
+        "description": "Increase volume"
+      }
+    },
+    "button2": {
+      "layer1": {
+        "action": "key",
+        "value": "b",
+        "description": "Press 'b' key"
+      },
+      "layer2": {
+        "action": "key",
+        "value": "2",
+        "description": "Press '2' key"
+      },
+      "layer3": {
+        "action": "macro",
+        "value": ["CTRL", "v"],
+        "description": "Paste"
+      },
+      "layer4": {
+        "action": "function",
+        "value": "volumeDown",
+        "description": "Decrease volume"
+      }
+    },
+    "button3": {
+      "layer1": {
+        "action": "key",
+        "value": "c",
+        "description": "Press 'c' key"
+      },
+      "layer2": {
+        "action": "key",
+        "value": "3",
+        "description": "Press '3' key"
+      },
+      "layer3": {
+        "action": "macro",
+        "value": ["CTRL", "x"],
+        "description": "Cut"
+      },
+      "layer4": {
+        "action": "function",
+        "value": "mute",
+        "description": "Mute audio"
+      }
+    }
+  }
+}
