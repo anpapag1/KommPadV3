@@ -6,9 +6,26 @@ import json
 import os
 from pynput.keyboard import Key, Controller
 import subprocess
+from device_detector import find_kommpad, get_last_port_info, ping_device
+from button_handler import handle_button_press, handle_encoder_press, handle_encoder_rotation
+from serial_utils import write_serial, set_serial_connection
+import pystray
+from PIL import Image
+import webbrowser
 
 # Initialize keyboard controller
 keyboard = Controller()
+
+# Global variables for the application state
+app_state = {
+    'connected': False,
+    'device_port': None,
+    'device_info': None,
+    'serial_connection': None,
+    'config': None,
+    'tray_icon': None,
+    'current_layer': 0  # Current layer (0-3)
+}
 
 # Load the configuration file
 def load_config():
@@ -20,224 +37,209 @@ def load_config():
         print(f"Error loading config: {e}")
         return None
 
-def find_kommpad(baudrate=9600, timeout=2):
-    """Search all COM ports for a device that identifies as 'KommPad'"""
-    print("Searching for KommPad on available COM ports...")
-    
-    # Get a list of all available COM ports
-    ports = list(serial.tools.list_ports.comports())
-    
-    if not ports:
-        print("No COM ports found. Make sure your device is connected.")
-        return None
-    
-    print(f"Found {len(ports)} COM ports to check.")
-    
-    for port in ports:
-        # Display detailed port information
-        print(f"\nPort: {port.device}")
-        print(f"  Description: {port.description}")
-        print(f"  Hardware ID: {port.hwid}")
-        if hasattr(port, 'manufacturer') and port.manufacturer:
-            print(f"  Manufacturer: {port.manufacturer}")
-        if hasattr(port, 'product') and port.product:
-            print(f"  Product: {port.product}")
-        
-        print(f"Trying {port.device}... ", end='', flush=True)
-        try:
-            # Try to open the port
-            ser = serial.Serial(port.device, baudrate=baudrate, timeout=timeout)
-            
-            # Reset the device by toggling DTR
-            print("Resetting device... ", end='', flush=True)
-            ser.dtr = False  # Set DTR line low
-            time.sleep(0.1)  # Brief pause
-            ser.dtr = True   # Set DTR line high
-            time.sleep(0.1)  # Brief pause
-            ser.dtr = False  # Set DTR line low again
-            
-            # Wait a moment for the device to reset and initialize
-            time.sleep(2)
-            
-            # Clear any initial data
-            ser.reset_input_buffer()
-            
-            # Send ping command to identify the device
-            print("Pinging device... ", end='', flush=True)
-            ser.write(b'ping\n')
-            
-            # Read data for a few seconds to see if we get the KommPad identification
-            start_time = time.time()
-            while (time.time() - start_time) < 3:  # Listen for 3 seconds
-                if ser.in_waiting > 0:
-                    line = ser.readline().decode('utf-8', errors='replace').strip()
-                    
-                    if "pong KommPad" in line or "KommPad" in line:
-                        print(f"Success! KommPad found.")
-                        return ser
-                    
-                    # Print other messages we might receive
-                    if line:
-                        print(f"\nReceived: {line}")
-                
-                time.sleep(0.3)
-            
-            # Close the port if it's not the KommPad
-            print(" Not a KommPad.")
-            ser.close()
-            
-        except (serial.SerialException, OSError) as e:
-            print(f"Error: {str(e)}")
-    
-    return None
-
-def get_key_from_string(key_str):
-    """Convert string representation of key to pynput Key object if special key"""
-    special_keys = {
-        'CTRL': Key.ctrl, 'ALT': Key.alt, 'SHIFT': Key.shift,
-        'ENTER': Key.enter, 'ESC': Key.esc, 'TAB': Key.tab,
-        'SPACE': Key.space, 'BACKSPACE': Key.backspace,
-        'DELETE': Key.delete, 'INSERT': Key.insert,
-        'HOME': Key.home, 'END': Key.end,
-        'PAGE_UP': Key.page_up, 'PAGE_DOWN': Key.page_down,
-        'UP': Key.up, 'DOWN': Key.down, 'LEFT': Key.left, 'RIGHT': Key.right,
-        'F1': Key.f1, 'F2': Key.f2, 'F3': Key.f3, 'F4': Key.f4,
-        'F5': Key.f5, 'F6': Key.f6, 'F7': Key.f7, 'F8': Key.f8,
-        'F9': Key.f9, 'F10': Key.f10, 'F11': Key.f11, 'F12': Key.f12
-    }
-    
-    return special_keys.get(key_str.upper(), key_str)
-
-def execute_function(function_name):
-    """Execute special functions like volume control"""
-    print(f"Executing function: {function_name}")
-    
-    if function_name == "volumeUp":
-        keyboard.press(Key.media_volume_up)
-        keyboard.release(Key.media_volume_up)
-        return True
-    elif function_name == "volumeDown":
-        keyboard.press(Key.media_volume_down)
-        keyboard.release(Key.media_volume_down)
-        return True
-    elif function_name == "mute":
-        keyboard.press(Key.media_volume_mute)
-        keyboard.release(Key.media_volume_mute)
-        return True
-    
-    print(f"Unknown function: {function_name}")
-    return False
-
-def handle_button_press(config, button_number, ser=None):
-    """Process button press according to JSON config (layer 1 only)"""
-    button_key = f"button{button_number}"
-    
-    if not config or "mappings" not in config or button_key not in config["mappings"]:
-        print(f"No mapping found for {button_key}")
-        return
-    
-    # Get the layer 1 action for this button
-    button_config = config["mappings"][button_key]["layer1"]
-    action_type = button_config.get("action")
-    action_value = button_config.get("value")
-    
-    print(f"Executing: {action_type} - {action_value} ({button_config.get('description', 'No description')})")
-    
-    # Process the action locally on the PC
-    if action_type == "key":
-        key_value = get_key_from_string(action_value)
-        print(f"Pressing key: {key_value}")
-        keyboard.press(key_value)
-        keyboard.release(key_value)
-        
-    elif action_type == "macro":
-        print(f"Executing macro: {'+'.join(action_value)}")
-        # Press all keys in the combination
-        keys = [get_key_from_string(k) for k in action_value]
-        
-        # Press all keys in sequence
-        for key in keys:
-            keyboard.press(key)
-        
-        # Release all keys in reverse order
-        for key in reversed(keys):
-            keyboard.release(key)
-            
-    elif action_type == "function":
-        execute_function(action_value)
-
 def read_serial(ser, config):
     """Continuously read from the serial port and process commands"""
-    print("Monitoring device output (Ctrl+C to exit):")
-    print("-" * 40)
-    
     try:
-        while True:
+        while app_state['connected'] and ser.is_open:
             if ser.in_waiting > 0:
                 line = ser.readline().decode('utf-8', errors='replace').strip()
                 if line:
-                    print(f"← {line}")
-                    
-                    # Handle button press messages
-                    if line.startswith("b "):
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            try:
-                                button_number = int(parts[1])
-                                handle_button_press(config, button_number)
-                            except ValueError:
-                                print(f"Invalid button number: {parts[1]}")
+                    # Handle button press messages in the style "button1 layer0"
+                    parts = line.split()
+                    if parts[0].startswith("button"):
+                        try:
+                            handle_button_press(config, parts[0], parts[1])
+                        except ValueError:
+                            print(f"Invalid button or layer: {line}")
                     
             time.sleep(0.1)
     except serial.SerialException as e:
-        print(f"\nError reading from device: {e}")
-        print("Device may have been disconnected.")
+        print(f"Device disconnected: {e}")
+        app_state['connected'] = False
+        update_tray_status(False)
     except UnicodeDecodeError:
-        print("\nReceived data that couldn't be decoded as text.")
+        pass  # Ignore decode errors
 
 def main():
+    print("Starting KommPad Configurator...")
+    
     # Load configuration
     config = load_config()
     if not config:
         print("Failed to load configuration. Using default settings.")
+        config = {}
     else:
         print(f"Loaded configuration for {config.get('device', {}).get('name', 'Unknown device')}")
     
-    # Find the KommPad device
-    baudrate = 9600  # Default baudrate, adjust if needed
-    print(f"Searching for KommPad (expecting 'pong KommPad' message)")
-    print(f"Using baud rate: {baudrate}")
+    # Store config in global state
+    app_state['config'] = config
+      # Setup tray icon first
+    tray_icon = setup_tray_icon()
+    # Show last connection info if available
+    last_info = get_last_port_info()
+    if last_info:
+        print(f"Last connected to {last_info['port']}")
     
-    ser = find_kommpad(baudrate=baudrate)
+    # Try to connect to device in a separate thread
+    def connect_to_device():
+        # Wait a moment for tray icon to be fully initialized
+        time.sleep(1)
+        
+        ser = find_kommpad(baudrate=9600, debug=False)
+        
+        if ser:
+            app_state['serial_connection'] = ser
+            set_serial_connection(ser)  # Update serial_utils
+            app_state['device_port'] = ser.port
+            app_state['connected'] = True
+            app_state['device_info'] = config.get('device', {})
+            
+            print(f"Connected to KommPad on {ser.port}")
+            update_tray_status(True)
+            
+            # Start serial reading thread
+            read_thread = threading.Thread(target=read_serial, args=(ser, config), daemon=True)
+            read_thread.start()
+        else:
+            print("KommPad not found. Use tray icon to reconnect.")
+            app_state['connected'] = False
+            update_tray_status(False)
     
-    if not ser:
-        print("\nKommPad not found. Make sure it's connected and try again.")
-        return
+    # Start connection attempt in background
+    connect_thread = threading.Thread(target=connect_to_device, daemon=True)
+    connect_thread.start()
     
-    print(f"\nConnected to KommPad on {ser.port} at {ser.baudrate} baud.")
+    print("Running in system tray. Right-click tray icon for options.")
     
-    # Start a thread to continuously read from the serial port
-    read_thread = threading.Thread(target=read_serial, args=(ser, config), daemon=True)
-    read_thread.start()
-    
-    print("\nEnter commands to send to the KommPad (or 'exit' to quit):")
-    
+    # Run the tray icon (this blocks until quit)
     try:
-        while True:
-            command = input("> ")
-            if command.lower() == 'exit':
-                break
-                
-            # Send the command to the device
-            ser.write((command + '\n').encode('utf-8'))
-            print(f"→ {command}")
-    
+        tray_icon.run()
     except KeyboardInterrupt:
-        print("\nExiting...")
+        print("\nShutting down...")
     finally:
-        if ser and ser.is_open:
-            ser.close()
-            print("Serial connection closed.")
+        # Cleanup
+        if app_state['serial_connection'] and app_state['serial_connection'].is_open:
+            app_state['serial_connection'].close()
+        print("KommPad Configurator stopped.")
+
+def load_tray_image(connected=False):
+    """Load the appropriate tray icon image"""
+    try:
+        if connected:
+            image_path = os.path.join(os.path.dirname(__file__), 'assets', 'Logo.png')
+        else:
+            image_path = os.path.join(os.path.dirname(__file__), 'assets', 'Logo_disconnected.png')
+        
+        if os.path.exists(image_path):
+            return Image.open(image_path)
+        else:
+            # Create a simple fallback image if files don't exist
+            color = 'green' if connected else 'red'
+            return Image.new('RGB', (64, 64), color=color)
+    except Exception as e:
+        print(f"Error loading tray image: {e}")
+        # Create a simple fallback image
+        color = 'green' if connected else 'red'
+        return Image.new('RGB', (64, 64), color=color)
+
+def get_device_info_text():
+    """Get formatted device information for the tray menu"""
+    if app_state['connected'] and app_state['device_info']:
+        info = app_state['device_info']
+        return f"Device: {info.get('name', 'KommPad')}\nPort: {app_state['device_port']}\nStatus: Connected"
+    else:
+        return "Device: KommPad\nStatus: Disconnected"
+
+def open_config_file():
+    """Open the config.json file with the default editor"""
+    try:
+        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+        if os.path.exists(config_path):
+            # Try to open with default editor
+            if os.name == 'nt':  # Windows
+                os.startfile(config_path)
+            elif os.name == 'posix':  # macOS and Linux
+                subprocess.call(['open', config_path])
+        else:
+            print("Config file not found!")
+    except Exception as e:
+        print(f"Error opening config file: {e}")
+
+def reconnect_device():
+    """Attempt to reconnect to the KommPad device"""
+    print("Attempting to reconnect...")
+    update_tray_status(False)  # Show disconnected status
+    
+    # Stop current connection if exists
+    if app_state['serial_connection'] and app_state['serial_connection'].is_open:
+        app_state['serial_connection'].close()
+      # Try to find device again
+    ser = find_kommpad(baudrate=9600, debug=False)
+    
+    if ser:
+        app_state['serial_connection'] = ser
+        set_serial_connection(ser)  # Update serial_utils
+        app_state['device_port'] = ser.port
+        app_state['connected'] = True
+        update_tray_status(True)
+        
+        # Restart the serial reading thread
+        read_thread = threading.Thread(target=read_serial, args=(ser, app_state['config']), daemon=True)
+        read_thread.start()
+        
+        print(f"Reconnected to KommPad on {ser.port}")
+    else:
+        app_state['connected'] = False
+        app_state['device_port'] = None
+        print("Reconnection failed - device not found")
+
+def quit_application(icon, item):
+    """Quit the application"""
+    print("Shutting down KommPad Configurator...")
+    
+    # Close serial connection
+    if app_state['serial_connection'] and app_state['serial_connection'].is_open:
+        app_state['serial_connection'].close()
+    
+    # Stop the tray icon
+    icon.stop()
+
+def update_tray_status(connected):
+    """Update the tray icon to reflect connection status"""
+    if app_state['tray_icon']:
+        app_state['connected'] = connected
+        new_image = load_tray_image(connected)
+        app_state['tray_icon'].icon = new_image
+        
+        # Update tooltip
+        tooltip = f"KommPad - {'Connected' if connected else 'Disconnected'}"
+        if connected and app_state['device_port']:
+            tooltip += f" ({app_state['device_port']})"
+        app_state['tray_icon'].title = tooltip
+
+def create_tray_menu():
+    """Create the context menu for the tray icon"""
+    return pystray.Menu(
+        pystray.MenuItem("Configure", lambda icon, item: open_config_file()),
+        pystray.MenuItem("Reconnect", lambda icon, item: reconnect_device()),
+        pystray.Menu.SEPARATOR,
+        pystray.MenuItem("Quit", quit_application)
+    )
+
+def setup_tray_icon():
+    """Setup and run the system tray icon"""
+    # Load initial image (disconnected)
+    image = load_tray_image(False)
+    
+    # Create tray icon
+    app_state['tray_icon'] = pystray.Icon(
+        "KommPad",
+        image,
+        "KommPad - Disconnected",
+        menu=create_tray_menu()
+    )
+    
+    return app_state['tray_icon']
 
 if __name__ == "__main__":
     main()

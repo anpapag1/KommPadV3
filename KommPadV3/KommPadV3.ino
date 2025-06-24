@@ -22,6 +22,9 @@ Keypad keypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols);
 int currentStateencPin1;
 int lastStateencPin1;
 
+const uint8_t MAX_LAYERS = 4;   // 0 … 3   (adjust if you need more)
+volatile uint8_t currentLayer = 0;
+
 // Setup function to initialize components
 void setup() {
 
@@ -37,38 +40,41 @@ void setup() {
   lastStateencPin1 = digitalRead(encPin1);  // Encoder 1 initial state
 }
 
-// Main loop function
-bool helpHidden = false;
-bool idleTriggered = false;
-
 void loop() {
   read_serial();
+  read_btn();
+  read_enc();
+
+
+  delay(1);  // Small delay to ensure the loop runs smoothly
+}
+
+void read_btn() {
+  // Get pressed key from the keypad
+  char key = keypad.getKey();
+
+  // If a key is pressed, execute the corresponding action
+  if (key != NO_KEY) {
+    sendEvent(key);
+  }
+}
+
+void read_enc() {
   currentStateencPin1 = digitalRead(encPin1);                                 // Read the current state of the encoder pin
   if (currentStateencPin1 != lastStateencPin1 && currentStateencPin1 == 1) {  // Encoder pin change detection
     if (digitalRead(encPin2) != currentStateencPin1) {                        // Counter-clockwise rotation
-      Serial.println("e 1");
+      sendEvent('7');
     } else {  // Clockwise rotation
-      Serial.println("e 2");
+      sendEvent('8');
     }
   }
   lastStateencPin1 = currentStateencPin1;  // Store the last encoder pin state
 
   // Check if encoder switch (SW) is pressed
   if (digitalRead(SW) == LOW) {
-      Serial.println("e 3");
+    currentLayer = (currentLayer + 1) % MAX_LAYERS;
     while (digitalRead(SW) == LOW) {}  // Wait for switch release or long press time
   }
-
-  // Get pressed key from the keypad
-  char key = keypad.getKey();
-
-  // If a key is pressed, execute the corresponding action
-  if (key != NO_KEY) {
-    Serial.print("b ");
-    Serial.println(key);
-  }
-
-  delay(1);  // Small delay to ensure the loop runs smoothly
 }
 
 void read_serial() {
@@ -79,10 +85,21 @@ void read_serial() {
 
     // Process the input command
     if (input == "ping") {
-      Serial.println("pong KommPad");
+      Serial.println("KommPong");
+    } else if (input == "leyerUp") {
+      currentLayer = (currentLayer + 1) % MAX_LAYERS;
+      Serial.print("Layer changed to: ");
+      Serial.println(currentLayer);
     } else {
       Serial.print("Unknown command: ");
       Serial.println(input);
     }
   }
+}
+
+void sendEvent(char btn) {
+  Serial.print(F("button"));
+  Serial.print(btn);              // 0…5
+  Serial.print(F(" layer"));
+  Serial.println(currentLayer);   // 0…MAX_LAYERS-1
 }

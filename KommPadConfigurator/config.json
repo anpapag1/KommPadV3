@@ -3,75 +3,241 @@
     "name": "KommPad",
     "version": "1.0",
     "firmware": "1.0.0",
-    "backlightEnabled": true,
-    "defaultLayer": 1
+    "COM": "COM9"
   },
   "mappings": {
     "button1": {
-      "layer1": {
+      "layer0": {
         "action": "key",
         "value": "a",
+        "modifiers": [
+          "SHIFT"
+        ],
         "description": "Press 'a' key"
       },
-      "layer2": {
+      "layer1": {
         "action": "key",
         "value": "1",
+        "modifiers": [],
         "description": "Press '1' key"
       },
-      "layer3": {
+      "layer2": {
         "action": "macro",
-        "value": ["CTRL", "c"],
+        "value": [
+          "CTRL",
+          "c"
+        ],
+        "modifiers": [],
         "description": "Copy"
       },
-      "layer4": {
+      "layer3": {
         "action": "function",
         "value": "volumeUp",
+        "modifiers": [],
         "description": "Increase volume"
       }
     },
     "button2": {
-      "layer1": {
+      "layer0": {
         "action": "key",
         "value": "b",
         "description": "Press 'b' key"
       },
-      "layer2": {
+      "layer1": {
         "action": "key",
         "value": "2",
         "description": "Press '2' key"
       },
-      "layer3": {
+      "layer2": {
         "action": "macro",
-        "value": ["CTRL", "v"],
+        "value": [
+          "CTRL",
+          "v"
+        ],
         "description": "Paste"
       },
-      "layer4": {
+      "layer3": {
         "action": "function",
         "value": "volumeDown",
         "description": "Decrease volume"
       }
     },
     "button3": {
-      "layer1": {
+      "layer0": {
         "action": "key",
         "value": "c",
         "description": "Press 'c' key"
       },
-      "layer2": {
+      "layer1": {
         "action": "key",
         "value": "3",
         "description": "Press '3' key"
       },
-      "layer3": {
+      "layer2": {
         "action": "macro",
-        "value": ["CTRL", "x"],
+        "value": [
+          "CTRL",
+          "x"
+        ],
         "description": "Cut"
       },
-      "layer4": {
+      "layer3": {
         "action": "function",
         "value": "mute",
         "description": "Mute audio"
       }
+    },
+    "button4": {
+      "layer0": {
+        "action": "key",
+        "value": "a",
+        "description": "Press 'a' key"
+      },
+      "layer1": {
+        "action": "key",
+        "value": "1",
+        "description": "Press '1' key"
+      },
+      "layer2": {
+        "action": "macro",
+        "value": [
+          "CTRL",
+          "c"
+        ],
+        "description": "Copy"
+      },
+      "layer3": {
+        "action": "function",
+        "value": "volumeUp",
+        "description": "Increase volume"
+      }
+    },
+    "button5": {
+      "layer0": {
+        "action": "key",
+        "value": "b",
+        "description": "Press 'b' key"
+      },
+      "layer1": {
+        "action": "key",
+        "value": "2",
+        "description": "Press '2' key"
+      },
+      "layer2": {
+        "action": "macro",
+        "value": [
+          "CTRL",
+          "v"
+        ],
+        "description": "Paste"
+      },
+      "layer3": {
+        "action": "function",
+        "value": "volumeDown",
+        "description": "Decrease volume"
+      }
+    },
+    "button6": {
+      "layer0": {
+        "action": "function",
+        "value": "layerUp",
+        "description": "Layer Up"
+      },
+      "layer1": {
+        "action": "function",
+        "value": "layerUp",
+        "description": "Layer Up"
+      },
+      "layer2": {
+        "action": "function",
+        "value": "layerUp",
+        "description": "Layer Up"
+      },
+      "layer3": {
+        "action": "function",
+        "value": "layerUp",
+        "description": "Layer Up"
+      }
+    },
+    "encoder1": {
+      "layer0": {
+        "action": "key",
+        "value": "d",
+        "description": "Press 'd' key"
+      },
+      "layer1": {
+        "action": "key",
+        "value": "4",
+        "description": "Press '4' key"
+      },
+      "layer2": {
+        "action": "macro",
+        "value": [
+          "CTRL",
+          "z"
+        ],
+        "description": "Undo"
+      },
+      "layer3": {
+        "action": "function",
+        "value": "brightnessUp",
+        "description": "Increase brightness"
+      }
+    },
+    "encoder2": {
+      "layer0": {
+        "action": "key",
+        "value": "e",
+        "description": "Press 'e' key"
+      },
+      "layer1": {
+        "action": "key",
+        "value": "5",
+        "description": "Press '5' key"
+      },
+      "layer2": {
+        "action": "macro",
+        "value": [
+          "CTRL",
+          "y"
+        ],
+        "description": "Redo"
+      },
+      "layer3": {
+        "action": "function",
+        "value": "brightnessDown",
+        "description": "Decrease brightness"
+      }
+    },
+    "encoder3": {
+      "layer0": {
+        "action": "key",
+        "value": "f",
+        "description": "Press 'f' key"
+      },
+      "layer1": {
+        "action": "key",
+        "value": "6",
+        "description": "Press '6' key"
+      },
+      "layer2": {
+        "action": "macro",
+        "value": [
+          "CTRL",
+          "s"
+        ],
+        "description": "Save"
+      },
+      "layer3": {
+        "action": "function",
+        "value": "toggleFullscreen",
+        "description": "Toggle fullscreen mode"
+      }
     }
+  },
+  "settings": {
+    "MaxLayers": 4,
+    "Brightness": 75,
+    "idleTimeout": 300
   }
 }
