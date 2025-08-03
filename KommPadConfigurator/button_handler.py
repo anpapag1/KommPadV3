@@ -39,16 +39,15 @@ def get_key_from_string(key_str):
     
     return special_keys.get(key_str.upper(), key_str)
 
-def execute_key_action(key_value, modifier=None):
-    # Execute a single key action with optional modifiers
-    # modifier can be a single key or a list of keys
-    # join value with modifier if provided in keys
+def execute_key_action(key_value, modifiers=None):
+    # Execute a single key action with optional modifierss
+    # modifiers can be a single key or a list of keys
+    # join value with modifiers if provided in keys
     keys = []
-    if modifier:
-        keys.extend(get_key_from_string(mod) for mod in modifier)
+    if modifiers:
+        keys.extend(get_key_from_string(mod) for mod in modifiers)
     keys.append(get_key_from_string(key_value))
-    
-    print(f"Executing key action: {keys}")
+
     
     # Press all keys in sequence
     for key in keys:
@@ -71,11 +70,48 @@ def execute_macro_action(macro_keys):
     for key in reversed(keys):
         keyboard.release(key)
 
+def execute_media_action(media_value):
+    """Execute media control actions"""
+    
+    if media_value == "Volume_Up":
+        keyboard.press(Key.media_volume_up)
+        keyboard.release(Key.media_volume_up)
+        return True
+        
+    elif media_value == "Volume_Down":
+        keyboard.press(Key.media_volume_down)
+        keyboard.release(Key.media_volume_down)
+        return True
+        
+    elif media_value == "Volume_Mute":
+        keyboard.press(Key.media_volume_mute)
+        keyboard.release(Key.media_volume_mute)
+        return True
+        
+    elif media_value == "Media_Next":
+        keyboard.press(Key.media_next)
+        keyboard.release(Key.media_next)
+        return True
+        
+    elif media_value == "Media_Previous":
+        keyboard.press(Key.media_previous)
+        keyboard.release(Key.media_previous)
+        return True
+        
+    elif media_value == "Media_Play_Pause":
+        keyboard.press(Key.media_play_pause)
+        keyboard.release(Key.media_play_pause)
+        return True
+        
+    else:
+        print(f"Unknown media action: {media_value}")
+        return False
+
 def execute_function_action(function_name):
     """Execute special functions like volume control, brightness, etc."""
     
     if function_name == "layerUp":
-        write_serial("leyerUp")
+        write_serial("layerUp")
         print("Layer up command sent")
         return True
     
@@ -92,6 +128,14 @@ def execute_function_action(function_name):
     elif function_name == "mute":
         keyboard.press(Key.media_volume_mute)
         keyboard.release(Key.media_volume_mute)
+        return True
+        
+    elif function_name == "Open_Web":
+        # This function needs URL from modifiers - will be handled in button press handler
+        return True
+        
+    elif function_name == "Open_App":
+        # This function needs app path from modifiers - will be handled in button press handler
         return True
         
     elif function_name == "brightnessUp":
@@ -150,17 +194,55 @@ def handle_button_press(config, button_key, layer_key):
     button_config = button_mappings[layer_key]
     action_type = button_config.get("action")
     action_value = button_config.get("value")
-    action_modifier = button_config.get("modifier", None)
+    action_modifiers = button_config.get("modifiers", None)
     
     # Execute the appropriate action
     if action_type == "key":
-        execute_key_action(action_value ,action_modifier)
+        execute_key_action(action_value, action_modifiers)
         
     elif action_type == "macro":
         execute_macro_action(action_value)
         
+    elif action_type == "media":
+        execute_media_action(action_value)
+        
     elif action_type == "function":
-        execute_function_action(action_value)
+        # Handle special functions with modifiers
+        if action_value == "Open_Web" and action_modifiers:
+            # Extract URL from modifiers
+            url = None
+            for modifier in action_modifiers:
+                if modifier.startswith("url:"):
+                    url = modifier[4:]  # Remove "url:" prefix
+                    break
+            if url:
+                try:
+                    import webbrowser
+                    webbrowser.open(url)
+                    print(f"Opening URL: {url}")
+                except Exception as e:
+                    print(f"Error opening URL: {e}")
+            else:
+                print("No URL found in modifiers for Open_Web")
+                
+        elif action_value == "Open_App" and action_modifiers:
+            # Extract executable path from modifiers
+            exe_path = None
+            for modifier in action_modifiers:
+                if modifier.startswith("exe:"):
+                    exe_path = modifier[4:]  # Remove "exe:" prefix
+                    break
+            if exe_path:
+                try:
+                    import subprocess
+                    subprocess.Popen([exe_path])
+                    print(f"Opening application: {exe_path}")
+                except Exception as e:
+                    print(f"Error opening application: {e}")
+            else:
+                print("No executable path found in modifiers for Open_App")
+        else:
+            execute_function_action(action_value)
         
     else:
         print(f"Unknown action type: {action_type}")

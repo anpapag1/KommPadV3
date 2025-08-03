@@ -18,12 +18,20 @@ byte rowPins[numRows] = { 5, 4 };     // Rows 1 to 2
 // Create a Keypad object
 Keypad keypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols);
 
+// Led pins
+#define Leds 9
+
 // Encoder state variables
 int currentStateencPin1;
 int lastStateencPin1;
 
-const uint8_t MAX_LAYERS = 4;   // 0 … 3   (adjust if you need more)
+// variables
+uint8_t MAX_LAYERS = 4;   
 volatile uint8_t currentLayer = 0;
+// variables for leds (britness, mode, colors)
+uint16_t ledBrightness = 255;  // LED brightness (0-255)
+uint8_t ledMode = 0;           // LED mode (0-3)
+String Colors[4]
 
 // Setup function to initialize components
 void setup() {
@@ -97,8 +105,8 @@ void read_serial() {
   }
 }
 
-void sendEvent(char btn) {
-  Serial.print(F("button"));
+void sendEvent(char prefix ,char btn) {
+  Serial.print(prefix);
   Serial.print(btn);              // 0…5
   Serial.print(F(" layer"));
   Serial.println(currentLayer);   // 0…MAX_LAYERS-1

@@ -1,19 +1,20 @@
 {
   "device": {
     "max_layers": 4,
-    "COM": "COM12"
+    "COM": "COM12",
+    "AccentColor": "#d335d7"
   },
   "mappings": {
     "button1": {
       "layer0": {
-        "action": "key",
-        "value": "I",
+        "action": "media",
+        "value": "Media_Previous",
         "modifiers": [],
-        "display": "button"
+        "display": "Prev"
       },
       "layer1": {
         "action": "media",
-        "value": "Volume_Up",
+        "value": "Media_Previous",
         "modifiers": [],
         "display": "Prev"
       },
@@ -97,7 +98,7 @@
         "action": "function",
         "value": "Open_Web",
         "modifiers": [
-          "url:df.d"
+          "url:youtube.com"
         ],
         "display": "YT"
       },
@@ -147,13 +148,13 @@
     "button6": {
       "layer0": {
         "action": "function",
-        "value": "layerUp",
+        "value": "Layer_Up",
         "modifiers": [],
         "display": "Layer"
       },
       "layer1": {
         "action": "function",
-        "value": "layerUp",
+        "value": "Layer_Up",
         "modifiers": [],
         "display": "Layer"
       },
@@ -199,15 +200,15 @@
     "encoder2": {
       "layer0": {
         "action": "media",
-        "value": "Volume_Down",
+        "value": "Volume_Mute",
         "modifiers": [],
-        "display": "Vol --"
+        "display": "Mute"
       },
       "layer1": {
         "action": "media",
-        "value": "Volume_Down",
+        "value": "Volume_Mute",
         "modifiers": [],
-        "display": "Vol --"
+        "display": "Mute"
       },
       "layer2": {
         "action": "key",
@@ -225,15 +226,15 @@
     "encoder3": {
       "layer0": {
         "action": "media",
-        "value": "Volume_Mute",
+        "value": "Volume_Down",
         "modifiers": [],
-        "display": "Mute"
+        "display": "Voll --"
       },
       "layer1": {
         "action": "media",
-        "value": "Volume_Mute",
+        "value": "Volume_Down",
         "modifiers": [],
-        "display": "Mute"
+        "display": "Voll --"
       },
       "layer2": {
         "action": "key",
@@ -245,6 +246,84 @@
         "action": "key",
         "value": "A",
         "modifiers": [],
+        "display": "--"
+      }
+    },
+    "dial1": {
+      "layer0": {
+        "exe": "Spotify.exe",
+        "min": 0,
+        "max": 80,
+        "display": "Spotify"
+      },
+      "layer1": {
+        "exe": "",
+        "min": 0,
+        "max": 100,
+        "display": "--"
+      },
+      "layer2": {
+        "exe": "",
+        "min": 0,
+        "max": 100,
+        "display": "--"
+      },
+      "layer3": {
+        "exe": "",
+        "min": 0,
+        "max": 100,
+        "display": "--"
+      }
+    },
+    "dial2": {
+      "layer0": {
+        "exe": "Discord.exe",
+        "min": 0,
+        "max": 100,
+        "display": "Discord"
+      },
+      "layer1": {
+        "exe": "",
+        "min": 0,
+        "max": 100,
+        "display": "--"
+      },
+      "layer2": {
+        "exe": "",
+        "min": 0,
+        "max": 100,
+        "display": "--"
+      },
+      "layer3": {
+        "exe": "",
+        "min": 0,
+        "max": 100,
+        "display": "--"
+      }
+    },
+    "dial3": {
+      "layer0": {
+        "exe": "SYSTEM",
+        "min": 0,
+        "max": 100,
+        "display": "MIC"
+      },
+      "layer1": {
+        "exe": "",
+        "min": 0,
+        "max": 100,
+        "display": "--"
+      },
+      "layer2": {
+        "exe": "",
+        "min": 0,
+        "max": 100,
+        "display": "--"
+      },
+      "layer3": {
+        "exe": "",
+        "min": 0,
+        "max": 100,
         "display": "--"
       }
     }
@@ -256,7 +335,7 @@
         "name": "Media"
       },
       "layer1": {
-        "name": "no"
+        "name": "Windows"
       },
       "layer2": {
         "name": "Layer 3"
@@ -265,12 +344,11 @@
         "name": "Layer 4"
       }
     },
-    "Brightness": 66,
+    "Brightness": 32,
     "ColorMode": "solid",
     "Colors": [
       "#ff00ff",
-      "#00ffff",
-      "#00ff00"
+      "#00ffff"
     ],
     "idleTimeout": 300
   }

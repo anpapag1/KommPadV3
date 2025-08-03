@@ -4,6 +4,7 @@ import time
 import threading
 import json
 import os
+import sys
 from pynput.keyboard import Key, Controller
 import subprocess
 from device_detector import find_kommpad, get_last_port_info, ping_device
@@ -15,6 +16,9 @@ import webbrowser
 
 # Initialize keyboard controller
 keyboard = Controller()
+
+# Global config path
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
 
 # Global variables for the application state
 app_state = {
@@ -29,13 +33,20 @@ app_state = {
 
 # Load the configuration file
 def load_config():
-    config_path = os.path.join(os.path.dirname(__file__), 'config.json')
     try:
-        with open(config_path, 'r') as f:
+        with open(CONFIG_PATH, 'r') as f:
             return json.load(f)
     except Exception as e:
         print(f"Error loading config: {e}")
         return None
+
+def get_config_path():
+    """Get the path to the config.json file"""
+    return CONFIG_PATH
+
+def force_config_reload():
+    """Force a reload of the configuration (can be called by UI)"""
+    reload_config()
 
 def read_serial(ser, config):
     """Continuously read from the serial port and process commands"""
@@ -109,6 +120,10 @@ def main():
     connect_thread = threading.Thread(target=connect_to_device, daemon=True)
     connect_thread.start()
     
+    # Start config file watcher
+    config_watcher_thread = threading.Thread(target=watch_config_file, daemon=True)
+    config_watcher_thread.start()
+    
     print("Running in system tray. Right-click tray icon for options.")
     
     # Run the tray icon (this blocks until quit)
@@ -151,19 +166,64 @@ def get_device_info_text():
         return "Device: KommPad\nStatus: Disconnected"
 
 def open_config_file():
-    """Open the config.json file with the default editor"""
+    """Launch the UI configurator"""
     try:
-        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
-        if os.path.exists(config_path):
-            # Try to open with default editor
-            if os.name == 'nt':  # Windows
-                os.startfile(config_path)
-            elif os.name == 'posix':  # macOS and Linux
-                subprocess.call(['open', config_path])
+        # Path to the UI configurator script
+        ui_script_path = os.path.join(os.path.dirname(__file__), 'Configurator', 'ui.py')
+        
+        if os.path.exists(ui_script_path):
+            # Launch the UI configurator in a separate process
+            python_executable = sys.executable
+            subprocess.Popen([python_executable, ui_script_path])
+            print("Launching KommPad UI Configurator...")
         else:
-            print("Config file not found!")
+            print(f"UI configurator not found at: {ui_script_path}")
+            # Fallback to opening config file in text editor
+            if os.path.exists(CONFIG_PATH):
+                if os.name == 'nt':  # Windows
+                    os.startfile(CONFIG_PATH)
+                elif os.name == 'posix':  # macOS and Linux
+                    subprocess.call(['open', CONFIG_PATH])
     except Exception as e:
-        print(f"Error opening config file: {e}")
+        print(f"Error launching configurator: {e}")
+
+def reload_config():
+    """Reload the configuration file"""
+    try:
+        print("Reloading configuration...")
+        config = load_config()
+        if config:
+            app_state['config'] = config
+            print(f"Configuration reloaded successfully for {config.get('device', {}).get('name', 'Unknown device')}")
+        else:
+            print("Failed to reload configuration - using existing settings")
+    except Exception as e:
+        print(f"Error reloading config: {e}")
+
+def watch_config_file():
+    """Watch for changes to the config file and reload when modified"""
+    import time
+    last_modified = 0
+    
+    try:
+        if os.path.exists(CONFIG_PATH):
+            last_modified = os.path.getmtime(CONFIG_PATH)
+    except:
+        pass
+    
+    while True:
+        try:
+            if os.path.exists(CONFIG_PATH):
+                current_modified = os.path.getmtime(CONFIG_PATH)
+                if current_modified > last_modified:
+                    print("Config file changed, reloading...")
+                    time.sleep(0.1)  # Small delay to ensure file write is complete
+                    reload_config()
+                    last_modified = current_modified
+            time.sleep(1)  # Check every second
+        except Exception as e:
+            print(f"Error watching config file: {e}")
+            time.sleep(5)  # Wait longer on error
 
 def reconnect_device():
     """Attempt to reconnect to the KommPad device"""
@@ -175,7 +235,7 @@ def reconnect_device():
         app_state['serial_connection'].close()
       # Try to find device again
     ser = find_kommpad(baudrate=9600, debug=False)
-    
+
     if ser:
         app_state['serial_connection'] = ser
         set_serial_connection(ser)  # Update serial_utils
@@ -220,8 +280,9 @@ def update_tray_status(connected):
 def create_tray_menu():
     """Create the context menu for the tray icon"""
     return pystray.Menu(
-        pystray.MenuItem("Configure", lambda icon, item: open_config_file()),
-        pystray.MenuItem("Reconnect", lambda icon, item: reconnect_device()),
+        pystray.MenuItem("Open Configurator", lambda icon, item: open_config_file()),
+        pystray.MenuItem("Reconnect Device", lambda icon, item: reconnect_device()),
+        pystray.MenuItem("Reload Config", lambda icon, item: reload_config()),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Quit", quit_application)
     )
