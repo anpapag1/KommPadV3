@@ -22,6 +22,14 @@ class SettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent_window = parent
+        
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Get the parent directory (KommPadConfigurator)
+        parent_dir = os.path.dirname(script_dir)
+        # Construct path to assets folder
+        self.assets_path = os.path.join(parent_dir, "assets")
+        
         self.setWindowTitle("KommPad Settings")
         self.setFixedSize(450, 550)
         self.setModal(True)
@@ -33,19 +41,20 @@ class SettingsDialog(QDialog):
         self.accent_color = "#D51BBF"  # Default accent color
         
         # Apply modern styling matching button configurator dark theme
-        self.setStyleSheet("""
-            QDialog {
+        down_arrow_path = os.path.join(self.assets_path, "down_arrow.png").replace(os.sep, "/")
+        self.setStyleSheet(f"""
+            QDialog {{
                 background-color: #565656;
                 border-radius: 16px;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QLabel {
+            }}
+            QLabel {{
                 color: #e0e0e0;
                 font-weight: 500;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
                 background-color: transparent;
-            }
-            QLineEdit {
+            }}
+            QLineEdit {{
                 border: 2px solid #606060;
                 border-radius: 12px;
                 padding: 12px 16px;
@@ -54,16 +63,16 @@ class SettingsDialog(QDialog):
                 color: #e0e0e0;
                 min-height: 20px;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QLineEdit:focus {
+            }}
+            QLineEdit:focus {{
                 border-color: #888888;
                 background-color: #505050;
                 outline: none;
-            }
-            QLineEdit::placeholder {
+            }}
+            QLineEdit::placeholder {{
                 color: #b0b0b0;
-            }
-            QComboBox {
+            }}
+            QComboBox {{
                 border: 2px solid #606060;
                 border-radius: 12px;
                 padding: 12px 16px;
@@ -73,32 +82,32 @@ class SettingsDialog(QDialog):
                 min-height: 20px;
                 min-width: 200px;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QComboBox:focus {
+            }}
+            QComboBox:focus {{
                 border-color: #888888;
                 background-color: #505050;
-            }
-            QComboBox::drop-down {
+            }}
+            QComboBox::drop-down {{
                 border: none;
                 width: 30px;
                 background-color: #505050;
                 border-radius: 6px;
-            }
-            QComboBox::down-arrow {
-                image: url('assets/down_arrow.png');
+            }}
+            QComboBox::down-arrow {{
+                image: url('{down_arrow_path}');
                 border: none;
                 width: 12px;
                 height: 12px;
-            }
-            QComboBox QAbstractItemView {
+            }}
+            QComboBox QAbstractItemView {{
                 background-color: #404040;
                 color: #e0e0e0;
                 border: 2px solid #606060;
                 border-radius: 8px;
                 selection-background-color: #606060;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QSpinBox {
+            }}
+            QSpinBox {{
                 border: 2px solid #606060;
                 border-radius: 12px;
                 padding: 12px 16px;
@@ -108,27 +117,27 @@ class SettingsDialog(QDialog):
                 min-height: 20px;
                 min-width: 80px;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QSpinBox:focus {
+            }}
+            QSpinBox:focus {{
                 border-color: #888888;
                 background-color: #505050;
-            }
-            QSpinBox::up-button, QSpinBox::down-button {
+            }}
+            QSpinBox::up-button, QSpinBox::down-button {{
                 background-color: none;
                 border: none;
                 width: 25px;
                 border-radius: 6px;
-            }
-            QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+            }}
+            QSpinBox::up-button:hover, QSpinBox::down-button:hover {{
                 background-color: #606060;
-            }
-            QSpinBox::up-arrow, QSpinBox::down-arrow {
+            }}
+            QSpinBox::up-arrow, QSpinBox::down-arrow {{
                 image: none;
                 border: none;
                 width: 0px;
                 height: 0px;
-            }
-            QGroupBox {
+            }}
+            QGroupBox {{
                 font-size: 16px;
                 font-weight: bold;
                 color: #e0e0e0;
@@ -138,15 +147,15 @@ class SettingsDialog(QDialog):
                 padding-top: 12px;
                 background-color: transparent;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QGroupBox::title {
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 20px;
                 padding: 0 8px 0 8px;
                 background-color: transparent;
                 color: #e0e0e0;
-            }
-            QCheckBox {
+            }}
+            QCheckBox {{
                 color: #e0e0e0;
                 font-size: 14px;
                 font-weight: 500;
@@ -156,86 +165,86 @@ class SettingsDialog(QDialog):
                 background-color: #404040;
                 border-radius: 6px;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QCheckBox::indicator {
+            }}
+            QCheckBox::indicator {{
                 width: 18px;
                 height: 18px;
                 border: 2px solid #606060;
                 border-radius: 4px;
                 background-color: #404040;
-            }
-            QCheckBox::indicator:hover {
+            }}
+            QCheckBox::indicator:hover {{
                 border-color: #888888;
                 background-color: #505050;
-            }
-            QCheckBox::indicator:checked {
+            }}
+            QCheckBox::indicator:checked {{
                 background-color: #888888;
                 border-color: #888888;
-            }
-            QCheckBox::indicator:checked:hover {
+            }}
+            QCheckBox::indicator:checked:hover {{
                 background-color: #a0a0a0;
                 border-color: #a0a0a0;
-            }
-            QScrollArea {
+            }}
+            QScrollArea {{
                 border: none;
                 background-color: transparent;
-            }
-            QScrollArea > QWidget > QWidget {
+            }}
+            QScrollArea > QWidget > QWidget {{
                 background-color: transparent;
-            }
-            QScrollBar:vertical {
+            }}
+            QScrollBar:vertical {{
                 background-color: #404040;
                 width: 12px;
                 border-radius: 6px;
                 margin: 0px;
-            }
-            QScrollBar::handle:vertical {
+            }}
+            QScrollBar::handle:vertical {{
                 background-color: #606060;
                 border-radius: 6px;
                 min-height: 20px;
                 margin: 2px;
-            }
-            QScrollBar::handle:vertical:hover {
+            }}
+            QScrollBar::handle:vertical:hover {{
                 background-color: #707070;
-            }
-            QScrollBar::handle:vertical:pressed {
+            }}
+            QScrollBar::handle:vertical:pressed {{
                 background-color: #808080;
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 border: none;
                 background: none;
                 height: 0px;
-            }
-            QSlider::groove:horizontal {
+            }}
+            QSlider::groove:horizontal {{
                 height: 6px;
                 background: #404040;
                 border-radius: 3px;
                 border: 1px solid #606060;
-            }
-            QSlider::handle:horizontal {
+            }}
+            QSlider::handle:horizontal {{
                 background: #888888;
                 border: 2px solid #606060;
                 width: 20px;
                 height: 20px;
                 margin: -8px 0;
                 border-radius: 10px;
-            }
-            QSlider::handle:horizontal:hover {
+            }}
+            QSlider::handle:horizontal:hover {{
                 background: #a0a0a0;
                 border-color: #888888;
-            }
-            QSlider::handle:horizontal:pressed {
+            }}
+            QSlider::handle:horizontal:pressed {{
                 background: #707070;
                 border-color: #505050;
-            }
-            QSlider::sub-page:horizontal {
+            }}
+            QSlider::sub-page:horizontal {{
                 background: #888888;
                 border-radius: 3px;
-            }
-            QSlider::add-page:horizontal {
+            }}
+            QSlider::add-page:horizontal {{
                 background: #404040;
                 border-radius: 3px;
-            }
+            }}
         """)
         
         self.init_ui()

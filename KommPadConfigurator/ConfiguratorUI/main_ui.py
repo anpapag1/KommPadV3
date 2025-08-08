@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QLineEdit, QPushButton, QDialog, QSpinBox, QMenu, QAction
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QColor
@@ -11,10 +12,18 @@ import json
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Get the parent directory (KommPadConfigurator)
+        parent_dir = os.path.dirname(script_dir)
+        # Construct path to assets folder
+        self.assets_path = os.path.join(parent_dir, "assets")
+        
         self.setWindowTitle("KommPad Configurator")
         self.setGeometry(100, 100, 1200, 650)
         # small image at the top left corner
-        self.setWindowIcon(QIcon("assets/logo.png"))
+        self.setWindowIcon(QIcon(os.path.join(self.assets_path, "Logo.png")))
         self.setStyleSheet("""
             QWidget {
                 background-color: #565656;
@@ -88,7 +97,7 @@ class MainWindow(QWidget):
         layers_layout.setSpacing(8)
         
         # Layers image (SVG)
-        layers_image = QSvgWidget("assets/layers.svg")
+        layers_image = QSvgWidget(os.path.join(self.assets_path, "layers.svg"))
         layers_image.setFixedSize(26, 26)  # Set desired size
         
         # Layers label
@@ -238,13 +247,13 @@ class MainWindow(QWidget):
                 margin: 4px;
             }}
             QSpinBox::up-arrow {{
-                image: url('assets/up_arrow.png');
+                image: url('{os.path.join(self.assets_path, "up_arrow.png").replace(os.sep, "/")}');
                 width: 12px;
                 height: 12px;
                 border: none;
             }}
             QSpinBox::down-arrow {{
-                image: url('assets/down_arrow.png');
+                image: url('{os.path.join(self.assets_path, "down_arrow.png").replace(os.sep, "/")}');
                 width: 12px;
                 height: 12px;
                 border: none;
@@ -293,7 +302,7 @@ class MainWindow(QWidget):
         # Store reference to settings button
         self.settings_btn = settings_btn
         # Add SVG icon to button/
-        icon_widget = QSvgWidget("assets/settings.svg")
+        icon_widget = QSvgWidget(os.path.join(self.assets_path, "settings.svg"))
         icon_widget.setFixedSize(24, 24)
         icon_widget.setStyleSheet("""
             QSvgWidget {
@@ -553,8 +562,6 @@ class MainWindow(QWidget):
             "value": "",
             "modifiers": []
         })
-        
-        print(f"Opening settings dialog for Button {button_num} with config: {stored_config}")
         
         # Create and show appropriate dialog based on button type
         if button_num <= 6:

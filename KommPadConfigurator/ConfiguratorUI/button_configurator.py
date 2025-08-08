@@ -3,6 +3,7 @@ Modern Button Configurator Dialog
 A standalone PyQt5 dialog for configuring button actions, values, and modifiers.
 """
 
+import os
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, 
     QGroupBox, QComboBox, QCheckBox, QApplication, QMenu, QAction
@@ -17,6 +18,14 @@ class ButtonSettingsDialog(QDialog):
     
     def __init__(self, button_id, config=None, parent=None):
         super().__init__(parent)
+        
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Get the parent directory (KommPadConfigurator)
+        parent_dir = os.path.dirname(script_dir)
+        # Construct path to assets folder
+        self.assets_path = os.path.join(parent_dir, "assets")
+        
         self.button_id = button_id
         self.config = config or {}
         
@@ -25,16 +34,17 @@ class ButtonSettingsDialog(QDialog):
         self.setModal(True)
         
         # Apply modern styling matching UI3 dark theme
-        self.setStyleSheet("""
-            QDialog {
+        down_arrow_path = os.path.join(self.assets_path, "down_arrow.png").replace(os.sep, "/")
+        self.setStyleSheet(f"""
+            QDialog {{
                 background-color: #565656;
                 border-radius: 16px;
-            }
-            QLabel {
+            }}
+            QLabel {{
                 color: #e0e0e0;
                 font-weight: 500;
-            }
-            QLineEdit {
+            }}
+            QLineEdit {{
                 border: 2px solid #606060;
                 border-radius: 12px;
                 padding: 12px 16px;
@@ -42,16 +52,16 @@ class ButtonSettingsDialog(QDialog):
                 background-color: #404040;
                 color: #e0e0e0;
                 min-height: 20px;
-            }
-            QLineEdit:focus {
+            }}
+            QLineEdit:focus {{
                 border-color: #888888;
                 background-color: #505050;
                 outline: none;
-            }
-            QLineEdit::placeholder {
+            }}
+            QLineEdit::placeholder {{
                 color: #b0b0b0;
-            }
-            QComboBox {
+            }}
+            QComboBox {{
                 border: 2px solid #606060;
                 border-radius: 12px;
                 padding: 12px 16px;
@@ -60,31 +70,31 @@ class ButtonSettingsDialog(QDialog):
                 color: #e0e0e0;
                 min-height: 20px;
                 min-width: 200px;
-            }
-            QComboBox:focus {
+            }}
+            QComboBox:focus {{
                 border-color: #888888;
                 background-color: #505050;
-            }
-            QComboBox::drop-down {
+            }}
+            QComboBox::drop-down {{
                 border: none;
                 width: 30px;
                 background-color: #505050;
                 border-radius: 6px;
-            }
-            QComboBox::down-arrow {
-                image: url('assets/down_arrow.png');
+            }}
+            QComboBox::down-arrow {{
+                image: url('{down_arrow_path}');
                 border: none;
                 width: 12px;
                 height: 12px;
-            }
-            QComboBox QAbstractItemView {
+            }}
+            QComboBox QAbstractItemView {{
                 background-color: #404040;
                 color: #e0e0e0;
                 border: 2px solid #606060;
                 border-radius: 8px;
                 selection-background-color: #606060;
-            }
-            QGroupBox {
+            }}
+            QGroupBox {{
                 font-size: 16px;
                 font-weight: bold;
                 color: #e0e0e0;
@@ -93,14 +103,14 @@ class ButtonSettingsDialog(QDialog):
                 margin-top: 12px;
                 padding-top: 12px;
                 background-color: #404040;
-            }
-            QGroupBox::title {
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 20px;
                 padding: 0 8px 0 8px;
                 background-color: #404040;
                 color: #e0e0e0;
-            }
+            }}
         """)
         
         self.setup_ui()
@@ -319,8 +329,8 @@ class ButtonSettingsDialog(QDialog):
             keyboard_keys = [
                 "Space", "Enter", "Escape", "Tab", "Backspace", "Delete",
                 "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
-                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-                "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+                "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
                 "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
                 "Left", "Right", "Up", "Down", "Home", "End", "Page_Up", "Page_Down",
                 "Insert", "Print_Screen", "Scroll_Lock", "Pause",

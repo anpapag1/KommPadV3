@@ -7,7 +7,7 @@ import os
 import sys
 from pynput.keyboard import Key, Controller
 import subprocess
-from device_detector import find_kommpad, get_last_port_info, ping_device
+from device_detector import find_kommpad, get_last_port_info, ping_device, get_device_info
 from button_handler import handle_button_press, handle_encoder_press, handle_encoder_rotation
 from serial_utils import write_serial, set_serial_connection
 import pystray
@@ -62,7 +62,7 @@ def read_serial(ser, config):
                             handle_button_press(config, parts[0], parts[1])
                         except ValueError:
                             print(f"Invalid button or layer: {line}")
-                    
+
             time.sleep(0.1)
     except serial.SerialException as e:
         print(f"Device disconnected: {e}")
@@ -169,7 +169,7 @@ def open_config_file():
     """Launch the UI configurator"""
     try:
         # Path to the UI configurator script
-        ui_script_path = os.path.join(os.path.dirname(__file__), 'Configurator', 'ui.py')
+        ui_script_path = os.path.join(os.path.dirname(__file__), 'ConfiguratorUI', 'main_ui.py')
         
         if os.path.exists(ui_script_path):
             # Launch the UI configurator in a separate process
@@ -199,6 +199,8 @@ def reload_config():
             print("Failed to reload configuration - using existing settings")
     except Exception as e:
         print(f"Error reloading config: {e}")
+        # Attempt to reconnect
+        reconnect_device()
 
 def watch_config_file():
     """Watch for changes to the config file and reload when modified"""
@@ -216,9 +218,9 @@ def watch_config_file():
             if os.path.exists(CONFIG_PATH):
                 current_modified = os.path.getmtime(CONFIG_PATH)
                 if current_modified > last_modified:
-                    print("Config file changed, reloading...")
                     time.sleep(0.1)  # Small delay to ensure file write is complete
                     reload_config()
+                    reconnect_device()
                     last_modified = current_modified
             time.sleep(1)  # Check every second
         except Exception as e:
@@ -227,7 +229,6 @@ def watch_config_file():
 
 def reconnect_device():
     """Attempt to reconnect to the KommPad device"""
-    print("Attempting to reconnect...")
     update_tray_status(False)  # Show disconnected status
     
     # Stop current connection if exists
@@ -246,7 +247,7 @@ def reconnect_device():
         # Restart the serial reading thread
         read_thread = threading.Thread(target=read_serial, args=(ser, app_state['config']), daemon=True)
         read_thread.start()
-        
+
         print(f"Reconnected to KommPad on {ser.port}")
     else:
         app_state['connected'] = False

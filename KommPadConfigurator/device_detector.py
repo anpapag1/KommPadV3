@@ -34,6 +34,9 @@ def find_kommpad(baudrate=9600, timeout=2, debug=True):
         if last_port in available_ports:
             ser = try_connect_to_port(last_port, baudrate, timeout, debug)
             if ser:
+                # Send settings to the macropad after successful connection
+                app_state = load_app_state()  # Assuming a function to load app state
+                send_settings_to_macropad(ser, app_state)
                 return ser
         else:
             if debug:
@@ -67,6 +70,9 @@ def find_kommpad(baudrate=9600, timeout=2, debug=True):
         
         ser = try_connect_to_port(port.device, baudrate, timeout, debug)
         if ser:
+            # Send settings to the macropad after successful connection
+            app_state = load_app_state()  # Assuming a function to load app state
+            send_settings_to_macropad(ser, app_state)
             return ser
     
     if debug:
@@ -176,24 +182,28 @@ def save_last_port(port_device):
     """
     try:
         config_path = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
-        
+
         # Load existing config or create new one
         config = {}
         if os.path.exists(config_path):
             with open(config_path, 'r') as f:
                 config = json.load(f)
-        
+
         # Ensure device section exists
         if 'device' not in config:
             config['device'] = {}
-        
+
+        # Check if the port is different from the saved one
+        if config['device'].get('COM') == port_device:
+            return  # No need to save if the port is the same
+
         # Update only the COM port
         config['device']['COM'] = port_device
-        
+
         # Save back to file
         with open(config_path, 'w') as f:
             json.dump(config, f, indent=2)
-            
+
     except Exception as e:
         print(f"Warning: Could not save last port: {e}")
 
@@ -343,6 +353,53 @@ def get_last_port_info():
         print(f"Error getting last port info: {e}")
         return None
 
+def send_settings_to_macropad(ser, app_state):
+    """
+    Send settings to the macropad as a lightweight string.
+
+    Args:
+        ser (serial.Serial): The serial connection to the macropad.
+        app_state (dict): The application state containing configuration data.
+    """
+    try:
+        if 'settings' in app_state:
+            settings = app_state['settings']
+            # Prepare settings string with layer names
+            max_layers = settings.get('MaxLayers', 2)
+            layer_names_str = "-".join([settings.get('Layers', {}).get(f"layer{i}", {}).get("name", "") for i in range(4)])
+            brightness = settings.get('Brightness', 255)
+            color_mode = settings.get('ColorMode', 'solid')
+            colors = settings.get('Colors', [])
+            colors_str = "-".join(colors) if colors else ""
+            idle_timeout = settings.get('idleTimeout', 0)
+
+            settings_string = f"Settings: {max_layers},{layer_names_str},{brightness},{color_mode},{colors_str},{idle_timeout}"
+            ser.write((settings_string + '\n').encode('utf-8'))
+            print(f"Settings sent to the macropad: {settings_string}")
+        else:
+            print("Error: 'settings' key is missing in app_state.")
+    except Exception as e:
+        print(f"Error sending settings to the macropad: {e}")
+
+def load_app_state():
+    """
+    Load the application state from the config.json file.
+
+    Returns:
+        dict: The application state loaded from the config file.
+    """
+    try:
+        config_path = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                return json.load(f)
+        else:
+            print("Config file not found. Returning empty state.")
+            return {}
+    except Exception as e:
+        print(f"Error loading app state: {e}")
+        return {}
+
 # Test function
 def test_device_detector():
     """Test the device detector functionality"""
@@ -385,6 +442,8 @@ def test_device_detector():
         print("Connection closed.")
     else:
         print("KommPad not found.")
+        
+
 
 if __name__ == "__main__":
     test_device_detector()

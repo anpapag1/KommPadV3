@@ -107,66 +107,54 @@ def execute_media_action(media_value):
         print(f"Unknown media action: {media_value}")
         return False
 
-def execute_function_action(function_name):
+def execute_function_action(function_name, modifiers=None):
     """Execute special functions like volume control, brightness, etc."""
     
-    if function_name == "layerUp":
+    if function_name == "Layer_Up":
         write_serial("layerUp")
         print("Layer up command sent")
         return True
     
-    elif function_name == "volumeUp":
-        keyboard.press(Key.media_volume_up)
-        keyboard.release(Key.media_volume_up)
-        return True
-        
-    elif function_name == "volumeDown":
-        keyboard.press(Key.media_volume_down)
-        keyboard.release(Key.media_volume_down)
-        return True
-        
-    elif function_name == "mute":
-        keyboard.press(Key.media_volume_mute)
-        keyboard.release(Key.media_volume_mute)
-        return True
-        
     elif function_name == "Open_Web":
-        # This function needs URL from modifiers - will be handled in button press handler
+        if modifiers and isinstance(modifiers, list):
+            url = next((mod[4:] for mod in modifiers if mod.startswith("url:")), None)
+            if url:
+                try:
+                    import webbrowser
+                    webbrowser.open(url)
+                    print(f"Opening URL: {url}")
+                except Exception as e:
+                    print(f"Error opening URL: {e}")
+            else:
+                print("No URL found in modifiers for Open_Web")
+        else:
+            print("No valid URL modifier provided for Open_Web")
         return True
-        
+
     elif function_name == "Open_App":
-        # This function needs app path from modifiers - will be handled in button press handler
+        if modifiers and isinstance(modifiers, list):
+            exe_path = next((mod[4:] for mod in modifiers if mod.startswith("exe:")), None)
+            if exe_path:
+                try:
+                    subprocess.Popen([exe_path])
+                    print(f"Opening application: {exe_path}")
+                except Exception as e:
+                    print(f"Error opening application: {e}")
+            else:
+                print("No executable path found in modifiers for Open_App")
+        else:
+            print("No valid executable modifier provided for Open_App")
         return True
-        
-    elif function_name == "brightnessUp":
-        # Windows brightness control (may require additional setup)
-        try:
-            subprocess.run(['powershell', '-Command', 
-                          '(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1,100)'], 
-                          capture_output=True)
-        except:
-            print("Brightness control not available")
-        return True
-        
-    elif function_name == "brightnessDown":
-        # Windows brightness control (may require additional setup)
-        try:
-            subprocess.run(['powershell', '-Command', 
-                          '(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1,50)'], 
-                          capture_output=True)
-        except:
-            print("Brightness control not available")
-        return True
-        
-    elif function_name == "toggleFullscreen":
-        # F11 key typically toggles fullscreen
-        keyboard.press(Key.f11)
-        keyboard.release(Key.f11)
-        return True
-        
+    
+    elif function_name == "Text":
+        if modifiers and isinstance(modifiers, list):
+            keyboard.type(modifiers[0].split(":")[1])  
+            return True
+
     else:
-        print(f"Unknown function: {function_name}")
+        print(f"Unknown function action: {function_name}")
         return False
+    
 
 def handle_button_press(config, button_key, layer_key):
     """
@@ -207,42 +195,7 @@ def handle_button_press(config, button_key, layer_key):
         execute_media_action(action_value)
         
     elif action_type == "function":
-        # Handle special functions with modifiers
-        if action_value == "Open_Web" and action_modifiers:
-            # Extract URL from modifiers
-            url = None
-            for modifier in action_modifiers:
-                if modifier.startswith("url:"):
-                    url = modifier[4:]  # Remove "url:" prefix
-                    break
-            if url:
-                try:
-                    import webbrowser
-                    webbrowser.open(url)
-                    print(f"Opening URL: {url}")
-                except Exception as e:
-                    print(f"Error opening URL: {e}")
-            else:
-                print("No URL found in modifiers for Open_Web")
-                
-        elif action_value == "Open_App" and action_modifiers:
-            # Extract executable path from modifiers
-            exe_path = None
-            for modifier in action_modifiers:
-                if modifier.startswith("exe:"):
-                    exe_path = modifier[4:]  # Remove "exe:" prefix
-                    break
-            if exe_path:
-                try:
-                    import subprocess
-                    subprocess.Popen([exe_path])
-                    print(f"Opening application: {exe_path}")
-                except Exception as e:
-                    print(f"Error opening application: {e}")
-            else:
-                print("No executable path found in modifiers for Open_App")
-        else:
-            execute_function_action(action_value)
+        execute_function_action(action_value, action_modifiers)
         
     else:
         print(f"Unknown action type: {action_type}")

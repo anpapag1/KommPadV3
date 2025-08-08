@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt5.QtWidgets import (QApplication, QDialog, QVBoxLayout, QHBoxLayout, 
                              QLabel, QLineEdit, QComboBox, QPushButton, QSpinBox,
                              QGroupBox, QFormLayout, QFrame, QMessageBox, QMenu, QAction)
@@ -8,23 +9,32 @@ from PyQt5.QtGui import QFont, QKeySequence
 class DialSettingsDialog(QDialog):
     def __init__(self, title, config, parent=None):
         super().__init__(parent)
+        
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Get the parent directory (KommPadConfigurator)
+        parent_dir = os.path.dirname(script_dir)
+        # Construct path to assets folder
+        self.assets_path = os.path.join(parent_dir, "assets")
+        
         self.setWindowTitle(f"Configure {title}")
         self.setModal(True)
         self.setFixedSize(600, 500)  # Match button configurator size ratio
         
         # Apply modern styling matching button configurator
-        self.setStyleSheet("""
-            QDialog {
+        down_arrow_path = os.path.join(self.assets_path, "down_arrow.png").replace(os.sep, "/")
+        self.setStyleSheet(f"""
+            QDialog {{
                 background-color: #565656;
                 border-radius: 16px;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QLabel {
+            }}
+            QLabel {{
                 color: #e0e0e0;
                 font-weight: 500;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QLineEdit {
+            }}
+            QLineEdit {{
                 border: 2px solid #606060;
                 border-radius: 12px;
                 padding: 12px 16px;
@@ -33,16 +43,16 @@ class DialSettingsDialog(QDialog):
                 color: #e0e0e0;
                 min-height: 20px;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QLineEdit:focus {
+            }}
+            QLineEdit:focus {{
                 border-color: #888888;
                 background-color: #505050;
                 outline: none;
-            }
-            QLineEdit::placeholder {
+            }}
+            QLineEdit::placeholder {{
                 color: #b0b0b0;
-            }
-            QComboBox {
+            }}
+            QComboBox {{
                 border: 2px solid #606060;
                 border-radius: 12px;
                 padding: 12px 16px;
@@ -52,28 +62,28 @@ class DialSettingsDialog(QDialog):
                 min-height: 20px;
                 min-width: 200px;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QComboBox::drop-down {
+            }}
+            QComboBox::drop-down {{
                 border: none;
                 width: 30px;
                 background-color: #505050;
                 border-radius: 6px;
-            }
-            QComboBox::down-arrow {
-                image: url('assets/down_arrow.png');
+            }}
+            QComboBox::down-arrow {{
+                image: url('{down_arrow_path}');
                 border: none;
                 width: 12px;
                 height: 12px;
-            }
-            QComboBox QAbstractItemView {
+            }}
+            QComboBox QAbstractItemView {{
                 background-color: #404040;
                 color: #e0e0e0;
                 border: 2px solid #606060;
                 border-radius: 8px;
                 selection-background-color: #606060;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QSpinBox {
+            }}
+            QSpinBox {{
                 border: 2px solid #606060;
                 border-radius: 12px;
                 padding: 12px 16px;
@@ -83,40 +93,40 @@ class DialSettingsDialog(QDialog):
                 min-height: 20px;
                 min-width: 80px;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QSpinBox:focus {
+            }}
+            QSpinBox:focus {{
                 border-color: #888888;
                 background-color: #505050;
-            }
-            QSpinBox::up-button, QSpinBox::down-button {
+            }}
+            QSpinBox::up-button, QSpinBox::down-button {{
                 background-color: none;
                 border: none;
                 width: 25px;
                 border-radius: 6px;
-            }
-            QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+            }}
+            QSpinBox::up-button:hover, QSpinBox::down-button:hover {{
                 background-color: #606060;
-            }
-            QSpinBox::up-button::before {
+            }}
+            QSpinBox::up-button::before {{
                 content: "▲";
                 color: #e0e0e0;
                 font-size: 10px;
                 font-weight: bold;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QSpinBox::down-button::before {
+            }}
+            QSpinBox::down-button::before {{
                 content: "▼";
                 color: #e0e0e0;
                 font-size: 10px;
                 font-weight: bold;
                 font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            }
-            QSpinBox::up-arrow, QSpinBox::down-arrow {
+            }}
+            QSpinBox::up-arrow, QSpinBox::down-arrow {{
                 image: none;
                 border: none;
                 width: 0px;
                 height: 0px;
-            }
+            }}
         """)
         
         self.config = config.copy()
