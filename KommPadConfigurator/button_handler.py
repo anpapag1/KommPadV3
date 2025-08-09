@@ -120,10 +120,23 @@ def execute_function_action(function_name, modifiers=None):
             if url:
                 try:
                     import webbrowser
+                    
+                    # Ensure URL has a proper protocol
+                    if not url.startswith(('http://', 'https://', 'ftp://', 'file://')):
+                        # Add https:// as default for most websites
+                        if url.startswith('www.') or '.' in url:
+                            url = 'https://' + url
+                        else:
+                            # For sites like "youtube.com", "google.com", etc.
+                            url = 'https://' + url
+                    
+                    # Open in default browser
                     webbrowser.open(url)
-                    print(f"Opening URL: {url}")
+                    print(f"Opening URL in default browser: {url}")
+                    
                 except Exception as e:
                     print(f"Error opening URL: {e}")
+                    print(f"Tried to open: {url}")
             else:
                 print("No URL found in modifiers for Open_Web")
         else:

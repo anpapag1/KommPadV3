@@ -229,7 +229,24 @@ def watch_config_file():
                 if current_modified > last_modified:
                     time.sleep(0.1)  # Small delay to ensure file write is complete
                     reload_config()
-                    reconnect_device()
+                    
+                    # Only send new settings if device is connected, don't reconnect unnecessarily
+                    if app_state['connected'] and app_state['serial_connection']:
+                        try:
+                            # Import here to avoid circular imports
+                            from device_detector import send_settings_to_macropad
+                            send_settings_to_macropad(app_state['config'])
+                            print("Updated settings sent to macropad")
+                        except Exception as e:
+                            print(f"Error sending updated settings: {e}")
+                            # Only reconnect if sending settings failed
+                            print("Attempting to reconnect due to settings update failure...")
+                            reconnect_device()
+                    elif not app_state['connected']:
+                        # Only try to reconnect if we're not connected
+                        print("Device not connected, attempting to reconnect...")
+                        reconnect_device()
+                    
                     last_modified = current_modified
             time.sleep(1)  # Check every second
         except Exception as e:
@@ -238,12 +255,18 @@ def watch_config_file():
 
 def reconnect_device():
     """Attempt to reconnect to the KommPad device"""
+    print("Reconnecting to device...")
     update_tray_status(False)  # Show disconnected status
     
     # Stop current connection if exists
     if app_state['serial_connection'] and app_state['serial_connection'].is_open:
-        app_state['serial_connection'].close()
-      # Try to find device again
+        try:
+            app_state['serial_connection'].close()
+        except:
+            pass  # Ignore errors when closing
+        app_state['serial_connection'] = None
+    
+    # Try to find device again (with reduced timeout for faster reconnection)
     ser = find_kommpad(baudrate=9600, debug=False)
 
     if ser:
@@ -253,7 +276,15 @@ def reconnect_device():
         app_state['connected'] = True
         update_tray_status(True)
         
-        # Restart the serial reading thread
+        # Send current configuration immediately after reconnection
+        try:
+            from device_detector import send_settings_to_macropad
+            send_settings_to_macropad(app_state['config'])
+            print("Configuration sent to newly connected device")
+        except Exception as e:
+            print(f"Error sending configuration to device: {e}")
+        
+        # Start serial reading thread
         read_thread = threading.Thread(target=read_serial, args=(ser, app_state['config']), daemon=True)
         read_thread.start()
 
