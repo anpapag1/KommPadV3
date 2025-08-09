@@ -83,6 +83,10 @@ def read_serial(ser, config):
         print(f"Device disconnected: {e}")
         app_state['connected'] = False
         update_tray_status(False)
+    except PermissionError as e:
+        print("Device disconnected (unplugged)")
+        app_state['connected'] = False
+        update_tray_status(False)
     except UnicodeDecodeError:
         pass  # Ignore decode errors
 
