@@ -346,6 +346,7 @@
     "Colors": [
       "#ff00d8"
     ],
-    "idleTimeout": 300
+    "idleTimeout": 300,
+    "EnableDeviceMonitoring": false
   }
 }

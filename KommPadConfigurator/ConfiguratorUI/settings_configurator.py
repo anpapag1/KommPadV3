@@ -511,6 +511,16 @@ class SettingsDialog(QDialog):
         accent_layout.addStretch()
         group_layout.addLayout(accent_layout)
         
+        # Add device monitoring toggle
+        from PyQt5.QtWidgets import QCheckBox
+        
+        self.device_monitoring_enabled = True  # Default to enabled
+        self.device_monitoring_checkbox = QCheckBox("Enable automatic device detection")
+        self.device_monitoring_checkbox.setFont(QFont("JetBrains Mono", 12))
+        self.device_monitoring_checkbox.setChecked(self.device_monitoring_enabled)
+        self.device_monitoring_checkbox.setToolTip("Automatically detect and connect to KommPad when plugged in\n(Disable to reduce CPU usage)")
+        group_layout.addWidget(self.device_monitoring_checkbox)
+        
         layout.addWidget(group)
     
     def create_config_management(self, layout):
@@ -841,6 +851,8 @@ class SettingsDialog(QDialog):
                 self.update_color_buttons()
                 self.accent_color = "#D51BBF"
                 self.update_accent_color_display()
+                self.device_monitoring_enabled = True
+                self.device_monitoring_checkbox.setChecked(True)
                 
                 # Create default config
                 default_config = {
@@ -852,7 +864,8 @@ class SettingsDialog(QDialog):
                     "settings": {
                         "Brightness": 75,
                         "ColorMode": "solid",
-                        "Colors": ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"]
+                        "Colors": ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"],
+                        "EnableDeviceMonitoring": True
                     },
                     "mappings": {}
                 }
@@ -937,6 +950,9 @@ class SettingsDialog(QDialog):
                 self.led_mode = settings.get("ColorMode", "solid")
                 self.led_colors = settings.get("Colors", ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"])
                 
+                # Load device monitoring setting
+                self.device_monitoring_enabled = settings.get("EnableDeviceMonitoring", True)
+                
                 # Load accent color from device section
                 device = config.get("device", {})
                 self.accent_color = device.get("AccentColor", "#D51BBF")
@@ -951,6 +967,8 @@ class SettingsDialog(QDialog):
                     self.update_color_buttons()
                 if hasattr(self, 'accent_color_btn'):
                     self.update_accent_color_display()
+                if hasattr(self, 'device_monitoring_checkbox'):
+                    self.device_monitoring_checkbox.setChecked(self.device_monitoring_enabled)
                     
         except Exception as e:
             print(f"Error loading settings: {e}")
@@ -971,6 +989,7 @@ class SettingsDialog(QDialog):
             config["settings"]["Brightness"] = self.brightness_slider.value()
             config["settings"]["ColorMode"] = self.mode_combo.currentText()
             config["settings"]["Colors"] = self.led_colors.copy()
+            config["settings"]["EnableDeviceMonitoring"] = self.device_monitoring_checkbox.isChecked()
             
             # Update device section for accent color
             if "device" not in config:
