@@ -34,9 +34,6 @@ def find_kommpad(baudrate=9600, timeout=2, debug=True):
         if last_port in available_ports:
             ser = try_connect_to_port(last_port, baudrate, timeout, debug)
             if ser:
-                # Send settings to the macropad after successful connection
-                app_state = load_app_state()  # Assuming a function to load app state
-                send_settings_to_macropad(ser, app_state)
                 return ser
         else:
             if debug:
@@ -70,9 +67,6 @@ def find_kommpad(baudrate=9600, timeout=2, debug=True):
         
         ser = try_connect_to_port(port.device, baudrate, timeout, debug)
         if ser:
-            # Send settings to the macropad after successful connection
-            app_state = load_app_state()  # Assuming a function to load app state
-            send_settings_to_macropad(ser, app_state)
             return ser
     
     if debug:

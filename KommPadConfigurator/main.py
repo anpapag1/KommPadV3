@@ -101,7 +101,7 @@ def main():
         # Wait a moment for tray icon to be fully initialized
         time.sleep(1)
         
-        ser = find_kommpad(baudrate=9600, debug=False)
+        ser = find_kommpad(baudrate=9600, timeout=1, debug=False)
         
         if ser:
             app_state['serial_connection'] = ser
@@ -112,6 +112,14 @@ def main():
             
             print(f"Connected to KommPad on {ser.port}")
             update_tray_status(True)
+            
+            # Send current configuration immediately after initial connection
+            try:
+                from device_detector import send_settings_to_macropad
+                send_settings_to_macropad(ser, app_state['config'])
+                print("Initial configuration sent to macropad")
+            except Exception as e:
+                print(f"Error sending initial configuration to device: {e}")
             
             # Start serial reading thread
             read_thread = threading.Thread(target=read_serial, args=(ser, config), daemon=True)
@@ -235,7 +243,7 @@ def watch_config_file():
                         try:
                             # Import here to avoid circular imports
                             from device_detector import send_settings_to_macropad
-                            send_settings_to_macropad(app_state['config'])
+                            send_settings_to_macropad(app_state['serial_connection'], app_state['config'])
                             print("Updated settings sent to macropad")
                         except Exception as e:
                             print(f"Error sending updated settings: {e}")
@@ -267,7 +275,7 @@ def reconnect_device():
         app_state['serial_connection'] = None
     
     # Try to find device again (with reduced timeout for faster reconnection)
-    ser = find_kommpad(baudrate=9600, debug=False)
+    ser = find_kommpad(baudrate=9600, timeout=1, debug=False)
 
     if ser:
         app_state['serial_connection'] = ser
@@ -279,7 +287,7 @@ def reconnect_device():
         # Send current configuration immediately after reconnection
         try:
             from device_detector import send_settings_to_macropad
-            send_settings_to_macropad(app_state['config'])
+            send_settings_to_macropad(ser, app_state['config'])
             print("Configuration sent to newly connected device")
         except Exception as e:
             print(f"Error sending configuration to device: {e}")
