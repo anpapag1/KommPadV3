@@ -626,18 +626,6 @@ def main():
     
     if dialog.exec_() == QDialog.Accepted:
         config = dialog.get_config()
-        # print("Configuration saved:")
-        # print(f"  Display Name: {config['display_name']}")
-        # print(f"  Action Type: {config['action_type']}")
-        # print(f"  Value: {config['value']}")
-        # print(f"  Modifiers: {config['modifiers']}")
-        
-        # # Show parsed additional values from modifiers
-        # for modifier in config['modifiers']:
-        #     if modifier.startswith("exe:"):
-        #         print(f"  Executable: {modifier[4:]}")
-        #     elif modifier.startswith("text:"):
-        #         print(f"  Text to Type: {modifier[5:]}")
         print(config)
     else:
         print("Configuration cancelled")

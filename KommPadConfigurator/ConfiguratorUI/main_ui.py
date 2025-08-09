@@ -606,7 +606,7 @@ class MainWindow(QWidget):
                     encoder_label = encoder_labels[encoder_num - 1]
                     self.encoder_buttons[encoder_num - 1].setText(f"{encoder_label}: E{encoder_num}")
             
-            # Auto-save configuration
+            # Auto-save configuration when dialog is accepted
             self.save_configuration()
     
     def get_button_config_from_json(self, button_num):
@@ -769,10 +769,7 @@ class MainWindow(QWidget):
         
         # Update button displays
         self.update_button_displays()
-        
-        # Auto-save configuration when switching layers
-        self.save_configuration()
-    
+            
     def on_max_layers_changed(self, value):
         """Handle max layers change from spin box"""
         # Update the number of available layers

@@ -362,20 +362,36 @@ def send_settings_to_macropad(ser, app_state):
         app_state (dict): The application state containing configuration data.
     """
     try:
-        if 'settings' in app_state:
+        if 'settings' in app_state and 'mappings' in app_state:
             settings = app_state['settings']
             # Prepare settings string with layer names
             max_layers = settings.get('MaxLayers', 2)
-            layer_names_str = "-".join([settings.get('Layers', {}).get(f"layer{i}", {}).get("name", "") for i in range(4)])
+            layer_names_str = "~".join([settings.get('Layers', {}).get(f"layer{i}", {}).get("name", "") for i in range(4)])
             brightness = settings.get('Brightness', 255)
             color_mode = settings.get('ColorMode', 'solid')
             colors = settings.get('Colors', [])
-            colors_str = "-".join(colors) if colors else ""
+            colors_str = "~".join(colors) if colors else ""
             idle_timeout = settings.get('idleTimeout', 0)
+            # create string of display names of each button for all layers
+            mappings = app_state['mappings']
+            display_names = []
+            display_names_strs = []
+            for layer in range(4):
+                layer_display_names = []
+                layer_key = f"layer{layer}"
+                for button in range(1, 7):
+                    button_key = f"button{button}"
+                    display_name = mappings.get(button_key, {}).get(layer_key, {}).get("display", "")
+                    layer_display_names.append(display_name)
+                layer_display_names_str = "~".join(layer_display_names)
+                display_names_strs.append(layer_display_names_str)
+            display_names_str = "|".join(display_names_strs)
 
             settings_string = f"Settings: {max_layers},{layer_names_str},{brightness},{color_mode},{colors_str},{idle_timeout}"
+            display_names_string = f"DisplayNames: {display_names_str}"
+            ser.write((display_names_string + '\n').encode('utf-8'))
             ser.write((settings_string + '\n').encode('utf-8'))
-            print(f"Settings sent to the macropad: {settings_string}")
+            print(f"Settings sent to the macropad: {settings_string}, {display_names_string}")
         else:
             print("Error: 'settings' key is missing in app_state.")
     except Exception as e:

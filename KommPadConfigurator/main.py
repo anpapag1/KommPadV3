@@ -26,7 +26,7 @@ app_state = {
     'device_port': None,
     'device_info': None,
     'serial_connection': None,
-    'config': None,
+    'config': None, 
     'tray_icon': None,
     'current_layer': 0  # Current layer (0-3)
 }
@@ -62,6 +62,11 @@ def read_serial(ser, config):
                             handle_button_press(config, parts[0], parts[1])
                         except ValueError:
                             print(f"Invalid button or layer: {line}")
+                    elif parts[0].startswith("encoder"):
+                        try:
+                            handle_encoder_press(config, parts[0], parts[1])
+                        except ValueError:
+                            print(f"Invalid encoder or layer: {line}")
 
             time.sleep(0.1)
     except serial.SerialException as e:
@@ -183,9 +188,13 @@ def open_config_file():
                 if os.name == 'nt':  # Windows
                     os.startfile(CONFIG_PATH)
                 elif os.name == 'posix':  # macOS and Linux
+                    print("DEBUG: Opening config file with macOS/Linux default application")
                     subprocess.call(['open', CONFIG_PATH])
+            else:
+                print(f"DEBUG: Config file not found at: {CONFIG_PATH}")
     except Exception as e:
         print(f"Error launching configurator: {e}")
+        print(f"DEBUG: Exception details: {type(e).__name__}: {str(e)}")
 
 def reload_config():
     """Reload the configuration file"""
@@ -276,16 +285,18 @@ def update_tray_status(connected):
         tooltip = f"KommPad - {'Connected' if connected else 'Disconnected'}"
         if connected and app_state['device_port']:
             tooltip += f" ({app_state['device_port']})"
+        tooltip += "\nRight-click for menu"
         app_state['tray_icon'].title = tooltip
 
 def create_tray_menu():
     """Create the context menu for the tray icon"""
     return pystray.Menu(
-        pystray.MenuItem("Open Configurator", lambda icon, item: open_config_file()),
-        pystray.MenuItem("Reconnect Device", lambda icon, item: reconnect_device()),
-        pystray.MenuItem("Reload Config", lambda icon, item: reload_config()),
+        pystray.MenuItem("📋 Open Configurator", lambda icon, item: open_config_file(), default=True),
         pystray.Menu.SEPARATOR,
-        pystray.MenuItem("Quit", quit_application)
+        pystray.MenuItem("🔄 Reconnect Device", lambda icon, item: reconnect_device()),
+        pystray.MenuItem("🔃 Reload Config", lambda icon, item: reload_config()),
+        pystray.Menu.SEPARATOR,
+        pystray.MenuItem("❌ Quit", quit_application)
     )
 
 def setup_tray_icon():
@@ -293,11 +304,11 @@ def setup_tray_icon():
     # Load initial image (disconnected)
     image = load_tray_image(False)
     
-    # Create tray icon
+    # Create tray icon - simplified approach
     app_state['tray_icon'] = pystray.Icon(
         "KommPad",
         image,
-        "KommPad - Disconnected",
+        "KommPad - Disconnected\nRight-click for menu",
         menu=create_tray_menu()
     )
     

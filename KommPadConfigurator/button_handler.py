@@ -56,7 +56,6 @@ def execute_key_action(key_value, modifiers=None):
     for key in reversed(keys):
         keyboard.release(key)
      
-     
 def execute_macro_action(macro_keys):
     """Execute a key combination macro"""
     # Convert string keys to pynput Key objects
@@ -136,10 +135,29 @@ def execute_function_action(function_name, modifiers=None):
             exe_path = next((mod[4:] for mod in modifiers if mod.startswith("exe:")), None)
             if exe_path:
                 try:
-                    subprocess.Popen([exe_path])
-                    print(f"Opening application: {exe_path}")
+                    # Try different approaches to launch the application
+                    if os.path.isabs(exe_path) and os.path.exists(exe_path):
+                        # Absolute path that exists
+                        subprocess.Popen([exe_path])
+                        print(f"Opening application: {exe_path}")
+                    elif exe_path.endswith('.exe'):
+                        # Try to find the executable in PATH or use shell=True for Windows
+                        if os.name == 'nt':  # Windows
+                            subprocess.Popen(exe_path, shell=True)
+                            print(f"Opening application via shell: {exe_path}")
+                        else:
+                            subprocess.Popen([exe_path])
+                            print(f"Opening application: {exe_path}")
+                    else:
+                        # Treat as application name and let the shell handle it
+                        subprocess.Popen(exe_path, shell=True)
+                        print(f"Opening application via shell: {exe_path}")
+                except FileNotFoundError:
+                    print(f"Application not found: {exe_path}")
+                    print("Make sure the executable path is correct or the application is installed")
                 except Exception as e:
                     print(f"Error opening application: {e}")
+                    print(f"Tried to open: {exe_path}")
             else:
                 print("No executable path found in modifiers for Open_App")
         else:
@@ -153,8 +171,7 @@ def execute_function_action(function_name, modifiers=None):
 
     else:
         print(f"Unknown function action: {function_name}")
-        return False
-    
+        return False  
 
 def handle_button_press(config, button_key, layer_key):
     """
